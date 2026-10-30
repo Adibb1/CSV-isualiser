@@ -23,7 +23,7 @@
           <input
             type="text"
             id="projectName"
-            placeholder="Main.java"
+            placeholder="e.g. Main.java"
             required
           />
         </p>
@@ -31,32 +31,33 @@
         <p>
           <label for="projectDesc">Description:</label><br />
           <textarea
-            id="porjectDesc"
+            id="projectDesc"
             rows="3"
             cols="40"
-            placeholder="This project is for..."
+            placeholder="Enter project description"
             required
           ></textarea>
         </p>
 
         <p>
-          <label for="projectName">Java Code:</label><br />
+          <label for="projectCode">Java Code:</label><br />
           <textarea
-            id="porjectCode"
+            id="projectCode"
             rows="10"
             cols="50"
-            placeholder="public class Main{....}"
+            placeholder="Paste Java code here..."
+            required
           ></textarea>
         </p>
 
         <div>
-          <button type="button" id="candelBtn">Cancel</button>
+          <button type="button" id="cancelBtn">Cancel</button>
           <button type="submit" id="saveBtn">Save Project</button>
         </div>
       </form>
     </dialog>
 
-    <!-- VIew Code Dialog Modal -->
+    <!-- View Code Dialog Modal -->
     <dialog id="viewDialog">
       <h3 id="viewTitle"></h3>
       <p id="viewDesc"></p>
@@ -72,38 +73,37 @@
     <div id="projectContainer"></div>
 
     <script>
-      // sample data here
-      const SAMPLE_PROJECT = [
+      // Initial sample data if local storage is empty
+      const SAMPLE_PROJECTS = [
         {
           id: "sample-1",
           name: "HelloWorld.java",
           description:
             "A standard starter program that outputs Hello, World! to the console.",
-          code: 'public class Hello World {\n public static void main(String[]args){\n System.out.print("Hello, World!");\n}\n}',
+          code: 'public class HelloWorld {\n    public static void main(String[] args) {\n        System.out.println("Hello, World!");\n    }\n}',
         },
         {
           id: "sample-2",
-          name: "HelloWorld2.java",
-          description:
-            "2 A standard starter program that outputs Hello, World! to the console.",
-          code: '2 public class Hello World {\n public static void main(String[]args){\n System.out.print("Hello, World!");\n}\n}',
+          name: "SimpleCalculator.java",
+          description: "A simple addition utility class written in Java.",
+          code: 'public class SimpleCalculator {\n    public static int add(int a, int b) {\n        return a + b;\n    }\n\n    public static void main(String[] args) {\n        int result = add(5, 10);\n        System.out.println("Sum: " + result);\n    }\n}',
         },
       ];
 
-      //   Helper functions for LocalStorage management
+      // Helper functions for LocalStorage management
       function getProjects() {
         const data = localStorage.getItem("java_gallery_projects");
         if (!data) {
           localStorage.setItem(
             "java_gallery_projects",
-            JSON.stringify(SAMPLE_PROJECT),
+            JSON.stringify(SAMPLE_PROJECTS),
           );
-          return SAMPLE_PROJECT;
+          return SAMPLE_PROJECTS;
         }
         try {
           return JSON.parse(data);
         } catch (e) {
-          return SAMPLE_PROJECT;
+          return SAMPLE_PROJECTS;
         }
       }
 
@@ -161,6 +161,93 @@
           container.appendChild(fieldset);
         });
       }
+
+      // Safe Clipboard Copy Function
+      function copyToClipboard(text, targetButton) {
+        const dummy = document.createElement("textarea");
+        document.body.appendChild(dummy);
+        dummy.value = text;
+        dummy.select();
+        document.execCommand("copy");
+        document.body.removeChild(dummy);
+
+        if (targetButton) {
+          const originalText = targetButton.textContent;
+          targetButton.textContent = "Copied!";
+          setTimeout(() => {
+            targetButton.textContent = originalText;
+          }, 1500);
+        }
+      }
+
+      // Open Code View Modal
+      function openViewDialog(project) {
+        const dialog = document.getElementById("viewDialog");
+        document.getElementById("viewTitle").textContent = project.name;
+        document.getElementById("viewDesc").textContent = project.description;
+        document.getElementById("viewCode").textContent = project.code;
+
+        const copyBtn = document.getElementById("copyBtn");
+        copyBtn.onclick = (e) => copyToClipboard(project.code, e.target);
+
+        dialog.showModal();
+      }
+
+      // Delete project entry
+      function deleteProject(id) {
+        let projects = getProjects();
+        projects = projects.filter((p) => p.id !== id);
+        saveProjects(projects);
+        renderProjects();
+      }
+
+      // Event Listener setup
+      const projectDialog = document.getElementById("projectDialog");
+      const plusProjectBtn = document.getElementById("plusProject");
+      const cancelBtn = document.getElementById("cancelBtn");
+      const projectForm = document.getElementById("projectForm");
+      const closeViewBtn = document.getElementById("closeViewBtn");
+      const viewDialog = document.getElementById("viewDialog");
+
+      plusProjectBtn.addEventListener("click", () => {
+        document.getElementById("projectName").value = "";
+        document.getElementById("projectDesc").value = "";
+        document.getElementById("projectCode").value = "";
+        projectDialog.showModal();
+      });
+
+      cancelBtn.addEventListener("click", () => {
+        projectDialog.close();
+      });
+
+      closeViewBtn.addEventListener("click", () => {
+        viewDialog.close();
+      });
+
+      projectForm.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const name = document.getElementById("projectName").value.trim();
+        const description = document.getElementById("projectDesc").value.trim();
+        const code = document.getElementById("projectCode").value;
+
+        if (!name || !description || !code) return;
+
+        const newProject = {
+          id: "proj-" + Date.now(),
+          name: name,
+          description: description,
+          code: code,
+        };
+
+        const projects = getProjects();
+        projects.unshift(newProject);
+        saveProjects(projects);
+        renderProjects();
+        projectDialog.close();
+      });
+
+      // Initial load
+      renderProjects();
     </script>
   </body>
 </html>
