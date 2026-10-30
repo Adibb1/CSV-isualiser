@@ -10,5 +10,157 @@
     <h1>Gallery</h1>
     <h2>by Adib dan Nabil</h2>
     <button id="plusProject">+</button>
+
+    <hr />
+
+    <!-- Add Project Dialog Modal -->
+    <dialog id="projectDialog">
+      <form id="projectForm" method="dialog">
+        <h3>Add New Java Project</h3>
+
+        <p>
+          <label for="projectName">Project Name:</label><br />
+          <input
+            type="text"
+            id="projectName"
+            placeholder="Main.java"
+            required
+          />
+        </p>
+
+        <p>
+          <label for="projectDesc">Description:</label><br />
+          <textarea
+            id="porjectDesc"
+            rows="3"
+            cols="40"
+            placeholder="This project is for..."
+            required
+          ></textarea>
+        </p>
+
+        <p>
+          <label for="projectName">Java Code:</label><br />
+          <textarea
+            id="porjectCode"
+            rows="10"
+            cols="50"
+            placeholder="public class Main{....}"
+          ></textarea>
+        </p>
+
+        <div>
+          <button type="button" id="candelBtn">Cancel</button>
+          <button type="submit" id="saveBtn">Save Project</button>
+        </div>
+      </form>
+    </dialog>
+
+    <!-- VIew Code Dialog Modal -->
+    <dialog id="viewDialog">
+      <h3 id="viewTitle"></h3>
+      <p id="viewDesc"></p>
+      <pre><code id="viewCode"></code></pre>
+      <div>
+        <button type="button" id="copyBtn">Copy Code</button>
+        <button type="button" id="closeViewBtn">Close</button>
+      </div>
+    </dialog>
+
+    <!-- Project Gallery Container -->
+    <h2>Saved Projects</h2>
+    <div id="projectContainer"></div>
+
+    <script>
+      // sample data here
+      const SAMPLE_PROJECT = [
+        {
+          id: "sample-1",
+          name: "HelloWorld.java",
+          description:
+            "A standard starter program that outputs Hello, World! to the console.",
+          code: 'public class Hello World {\n public static void main(String[]args){\n System.out.print("Hello, World!");\n}\n}',
+        },
+        {
+          id: "sample-2",
+          name: "HelloWorld2.java",
+          description:
+            "2 A standard starter program that outputs Hello, World! to the console.",
+          code: '2 public class Hello World {\n public static void main(String[]args){\n System.out.print("Hello, World!");\n}\n}',
+        },
+      ];
+
+      //   Helper functions for LocalStorage management
+      function getProjects() {
+        const data = localStorage.getItem("java_gallery_projects");
+        if (!data) {
+          localStorage.setItem(
+            "java_gallery_projects",
+            JSON.stringify(SAMPLE_PROJECT),
+          );
+          return SAMPLE_PROJECT;
+        }
+        try {
+          return JSON.parse(data);
+        } catch (e) {
+          return SAMPLE_PROJECT;
+        }
+      }
+
+      function saveProjects(projects) {
+        localStorage.setItem("java_gallery_projects", JSON.stringify(projects));
+      }
+
+      // Render projects list onto page
+      function renderProjects() {
+        const container = document.getElementById("projectContainer");
+        container.innerHTML = "";
+        const projects = getProjects();
+
+        if (projects.length === 0) {
+          container.innerHTML = "<p>No projects saved yet.</p>";
+          return;
+        }
+
+        projects.forEach((project) => {
+          const fieldset = document.createElement("fieldset");
+
+          const legend = document.createElement("legend");
+          legend.textContent = project.name;
+          fieldset.appendChild(legend);
+
+          const h3 = document.createElement("h3");
+          h3.textContent = project.name;
+          fieldset.appendChild(h3);
+
+          const desc = document.createElement("p");
+          desc.textContent = project.description;
+          fieldset.appendChild(desc);
+
+          const pre = document.createElement("pre");
+          const code = document.createElement("code");
+          code.textContent = project.code;
+          pre.appendChild(code);
+          fieldset.appendChild(pre);
+
+          const viewBtn = document.createElement("button");
+          viewBtn.textContent = "View";
+          viewBtn.onclick = () => openViewDialog(project);
+          fieldset.appendChild(viewBtn);
+
+          const copyBtn = document.createElement("button");
+          copyBtn.textContent = "Copy";
+          copyBtn.onclick = (e) => copyToClipboard(project.code, e.target);
+          fieldset.appendChild(copyBtn);
+
+          const deleteBtn = document.createElement("button");
+          deleteBtn.textContent = "Delete";
+          deleteBtn.onclick = () => deleteProject(project.id);
+          fieldset.appendChild(deleteBtn);
+
+          container.appendChild(fieldset);
+        });
+      }
+    </script>
   </body>
 </html>
